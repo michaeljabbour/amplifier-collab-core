@@ -1,12 +1,13 @@
 # amplifier-module-tool-collab-core
 
-Core collaboration module for Amplifier with Microsoft 365 provider and shared interfaces.
+Core collaboration interfaces for Amplifier. Provides the abstract `CollaborationProvider` base class that platform-specific modules implement.
 
-## Features
+## Overview
 
-- **Unified Interface** - `CollaborationProvider` base class for all platforms
-- **M365 Provider** - Full Microsoft Graph integration (Teams, SharePoint, Outlook, Planner)
-- **Collaboration Tools** - Ready-to-use tools for channels, documents, directory, email
+This module provides:
+- **`CollaborationProvider`** - Abstract interface for all collaboration platforms
+- **Data models** - `User`, `Channel`, `Message`, `Document`, `Task`
+- **Provider registry** - Register and retrieve platform providers
 
 ## Installation
 
@@ -14,87 +15,80 @@ Core collaboration module for Amplifier with Microsoft 365 provider and shared i
 pip install amplifier-module-tool-collab-core
 ```
 
-Or from source:
-```bash
-pip install git+https://github.com/michaeljabbour/amplifier-module-tool-collab-core
-```
+## Platform Modules
 
-## Configuration
+Install the platform module(s) you need:
 
-Set environment variables:
-
-```bash
-export M365_TENANT_ID="your-tenant-id"
-export M365_CLIENT_ID="your-client-id"
-export M365_CLIENT_SECRET="your-client-secret"
-export M365_TEAMS_WEBHOOKS="general=https://...,alerts=https://...,handoffs=https://..."
-```
+| Platform | Module | Install |
+|----------|--------|---------|
+| Microsoft 365 | `tool-m365` | `pip install amplifier-module-tool-m365` |
+| Slack | `tool-slack` | `pip install amplifier-module-tool-slack` |
+| Google Workspace | `tool-google` | Coming soon |
 
 ## Usage
 
-### As Amplifier Module
+```python
+from amplifier_module_tool_collab_core import get_provider, list_providers
 
-The module auto-registers when loaded by Amplifier:
+# Import a platform module to register its provider
+import amplifier_module_tool_m365  # Registers 'm365'
+import amplifier_module_tool_slack  # Registers 'slack'
 
-```yaml
-# In your bundle
-tools:
-  - module: tool-collab-core
-    source: git+https://github.com/michaeljabbour/amplifier-module-tool-collab-core
+# List available providers
+print(list_providers())  # ['m365', 'slack']
+
+# Get a provider instance
+provider = get_provider("m365")
+
+# Use the unified interface
+users = await provider.list_users(limit=5)
+await provider.post_message("general", "Hello!")
 ```
 
-### Direct Python Usage
+## CollaborationProvider Interface
+
+All platform modules implement this interface:
 
 ```python
-import asyncio
-from amplifier_module_tool_collab_core import get_provider
-
-async def main():
-    provider = get_provider("m365")
+class CollaborationProvider(ABC):
+    @property
+    def name(self) -> str: ...
     
-    # List users
-    users = await provider.list_users(limit=5)
-    print(f"Found {len(users)} users")
+    # Users & Directory
+    async def list_users(self, limit: int = 25) -> list[User]: ...
+    async def get_user(self, user_id: str) -> User: ...
     
-    # Post to channel
-    await provider.post_message("general", "Hello from Amplifier!")
+    # Channels & Messaging
+    async def list_channels(self, team_id: str | None = None) -> list[Channel]: ...
+    async def get_messages(self, channel_id: str, limit: int = 20, team_id: str | None = None) -> list[Message]: ...
+    async def post_message(self, channel_name: str, message: str, title: str | None = None) -> bool: ...
     
-    # List documents
-    docs = await provider.list_documents(folder_path="Shared Documents")
-    for doc in docs:
-        print(f"  {doc.name}")
-
-asyncio.run(main())
+    # Documents & Files
+    async def list_documents(self, folder_path: str | None = None, site_id: str | None = None) -> list[Document]: ...
+    async def upload_document(self, name: str, content: bytes | str, folder_path: str | None = None, site_id: str | None = None) -> Document: ...
+    async def download_document(self, document_id: str, site_id: str | None = None) -> bytes: ...
+    
+    # Tasks
+    async def list_tasks(self, plan_id: str | None = None) -> list[Task]: ...
+    
+    # Email
+    async def send_email(self, to: list[str], subject: str, body: str, from_user: str | None = None) -> bool: ...
 ```
 
-## Tools
-
-| Tool | Operations | Description |
-|------|------------|-------------|
-| `collab_channels` | post, read, list | Channel messaging |
-| `collab_documents` | upload, download, list | File operations |
-| `collab_directory` | list_users, get_user | User lookup |
-| `collab_email` | send | Email notifications |
-
-## Provider Interface
-
-To add a new platform, implement `CollaborationProvider`:
+## Creating a New Provider
 
 ```python
-from amplifier_module_tool_collab_core import CollaborationProvider
+from amplifier_module_tool_collab_core import CollaborationProvider, register_provider
 
-class MyProvider(CollaborationProvider):
+class MyPlatformProvider(CollaborationProvider):
     @property
     def name(self) -> str:
         return "myplatform"
     
-    async def list_users(self, limit: int = 25) -> list[User]:
-        ...
-    
-    async def post_message(self, channel_name: str, message: str, title: str = None) -> bool:
-        ...
-    
-    # ... implement all abstract methods
+    # Implement all abstract methods...
+
+# Register on module import
+register_provider("myplatform", MyPlatformProvider)
 ```
 
 ## License

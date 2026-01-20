@@ -1,4 +1,8 @@
-"""Amplifier collaboration core module with M365 provider and shared interfaces."""
+"""Amplifier collaboration core module - shared interfaces and utilities.
+
+This module provides the abstract CollaborationProvider interface that all
+platform-specific modules (M365, Slack, Google) implement.
+"""
 
 from .providers.base import (
     CollaborationProvider,
@@ -8,50 +12,51 @@ from .providers.base import (
     Document,
     Task,
 )
-from .providers.m365 import M365Provider
 
 __all__ = [
     "CollaborationProvider",
     "User",
-    "Channel", 
+    "Channel",
     "Message",
     "Document",
     "Task",
-    "M365Provider",
-    "mount",
-    "get_provider",
 ]
 
 
-def get_provider(name: str = "m365") -> CollaborationProvider:
-    """Get a collaboration provider by name.
+# Provider registry - platform modules register themselves here
+_providers: dict[str, type[CollaborationProvider]] = {}
+
+
+def register_provider(name: str, provider_class: type[CollaborationProvider]) -> None:
+    """Register a collaboration provider.
+    
+    Called by platform modules (tool-m365, tool-slack, etc.) on import.
+    """
+    _providers[name] = provider_class
+
+
+def get_provider(name: str) -> CollaborationProvider:
+    """Get an instance of a registered provider.
     
     Args:
         name: Provider name ('m365', 'slack', 'google')
         
     Returns:
         Configured provider instance
+        
+    Raises:
+        ValueError: If provider is not registered
     """
-    providers = {
-        "m365": M365Provider,
-    }
+    if name not in _providers:
+        available = ", ".join(_providers.keys()) if _providers else "(none registered)"
+        raise ValueError(
+            f"Provider '{name}' not registered. Available: {available}. "
+            f"Make sure the corresponding module is installed (e.g., amplifier-module-tool-{name})"
+        )
     
-    if name not in providers:
-        available = ", ".join(providers.keys())
-        raise ValueError(f"Unknown provider '{name}'. Available: {available}")
-    
-    return providers[name]()
+    return _providers[name]()
 
 
-def mount(session):
-    """Mount collaboration tools to an Amplifier session.
-    
-    This is the entry point called by Amplifier's module loader.
-    """
-    from .tools import channels, documents, directory, email
-    
-    # Register tools with the session
-    session.register_tool("collab_channels", channels.collab_channels)
-    session.register_tool("collab_documents", documents.collab_documents)
-    session.register_tool("collab_directory", directory.collab_directory)
-    session.register_tool("collab_email", email.collab_email)
+def list_providers() -> list[str]:
+    """List all registered provider names."""
+    return list(_providers.keys())
