@@ -12,21 +12,21 @@ async def collab_directory(
     provider_name: str = "m365",
 ) -> dict:
     """User directory operations.
-    
+
     Args:
         operation: Action to perform ('list_users', 'get_user')
         user_id: User ID or email (for 'get_user')
         limit: Max users to return (for 'list_users')
         provider_name: Provider to use ('m365', 'slack', 'google')
-        
+
     Returns:
         Operation result dict
     """
     provider = get_provider(provider_name)
-    
+
     if operation == "list_users":
         users = await provider.list_users(limit=limit)
-        
+
         return {
             "users": [
                 {
@@ -38,13 +38,13 @@ async def collab_directory(
                 for u in users
             ],
         }
-    
+
     elif operation == "get_user":
         if not user_id:
             return {"error": "user_id required for 'get_user'"}
-        
+
         user = await provider.get_user(user_id)
-        
+
         return {
             "user": {
                 "id": user.id,
@@ -53,6 +53,6 @@ async def collab_directory(
                 "department": user.department,
             },
         }
-    
+
     else:
         return {"error": f"Unknown operation: {operation}"}

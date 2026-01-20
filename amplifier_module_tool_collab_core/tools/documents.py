@@ -15,7 +15,7 @@ async def collab_documents(
     provider_name: str = "m365",
 ) -> dict:
     """Document operations for artifact sharing.
-    
+
     Args:
         operation: Action to perform ('upload', 'download', 'list')
         file_name: Name for uploaded file
@@ -24,23 +24,23 @@ async def collab_documents(
         document_id: Document ID (for 'download')
         site_id: Site/drive ID (platform-specific)
         provider_name: Provider to use ('m365', 'slack', 'google')
-        
+
     Returns:
         Operation result dict
     """
     provider = get_provider(provider_name)
-    
+
     if operation == "upload":
         if not file_name or not content:
             return {"error": "file_name and content required for 'upload'"}
-        
+
         doc = await provider.upload_document(
             name=file_name,
             content=content,
             folder_path=folder_path,
             site_id=site_id,
         )
-        
+
         return {
             "success": True,
             "document": {
@@ -50,13 +50,13 @@ async def collab_documents(
                 "web_url": doc.web_url,
             },
         }
-    
+
     elif operation == "download":
         if not document_id:
             return {"error": "document_id required for 'download'"}
-        
+
         content_bytes = await provider.download_document(document_id, site_id)
-        
+
         # Try to decode as text, otherwise return size info
         try:
             text_content = content_bytes.decode("utf-8")
@@ -71,10 +71,10 @@ async def collab_documents(
                 "content": "(binary content)",
                 "size": len(content_bytes),
             }
-    
+
     elif operation == "list":
         docs = await provider.list_documents(folder_path, site_id)
-        
+
         return {
             "folder": folder_path or "root",
             "documents": [
@@ -88,6 +88,6 @@ async def collab_documents(
                 for d in docs
             ],
         }
-    
+
     else:
         return {"error": f"Unknown operation: {operation}"}

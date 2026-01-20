@@ -14,7 +14,7 @@ async def collab_email(
     provider_name: str = "m365",
 ) -> dict:
     """Email operations.
-    
+
     Args:
         operation: Action to perform ('send')
         to: List of recipient email addresses
@@ -22,28 +22,28 @@ async def collab_email(
         body: Email body
         from_user: Sender user ID (optional)
         provider_name: Provider to use ('m365', 'google')
-        
+
     Returns:
         Operation result dict
     """
     provider = get_provider(provider_name)
-    
+
     if operation == "send":
         if not to or not subject or not body:
             return {"error": "to, subject, and body required for 'send'"}
-        
+
         success = await provider.send_email(
             to=to,
             subject=subject,
             body=body,
             from_user=from_user,
         )
-        
+
         return {
             "success": success,
             "to": to,
             "subject": subject,
         }
-    
+
     else:
         return {"error": f"Unknown operation: {operation}"}
