@@ -1,10 +1,10 @@
-# amplifier-module-tool-collab-core
+# amplifier-collab-core
 
 Core collaboration interfaces for Amplifier. Provides the abstract `CollaborationProvider` base class that platform-specific modules implement.
 
 ## Overview
 
-This module provides:
+This library provides:
 - **`CollaborationProvider`** - Abstract interface for all collaboration platforms
 - **Data models** - `User`, `Channel`, `Message`, `Document`, `Task`
 - **Provider registry** - Register and retrieve platform providers
@@ -12,7 +12,7 @@ This module provides:
 ## Installation
 
 ```bash
-pip install amplifier-module-tool-collab-core
+pip install amplifier-collab-core
 ```
 
 ## Platform Modules
@@ -28,7 +28,7 @@ Install the platform module(s) you need:
 ## Usage
 
 ```python
-from amplifier_module_tool_collab_core import get_provider, list_providers
+from amplifier_collab_core import get_provider, list_providers
 
 # Import a platform module to register its provider
 import amplifier_module_tool_m365  # Registers 'm365'
@@ -78,7 +78,7 @@ class CollaborationProvider(ABC):
 ## Creating a New Provider
 
 ```python
-from amplifier_module_tool_collab_core import CollaborationProvider, register_provider
+from amplifier_collab_core import CollaborationProvider, register_provider
 
 class MyPlatformProvider(CollaborationProvider):
     @property

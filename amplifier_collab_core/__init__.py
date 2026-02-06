@@ -1,6 +1,6 @@
-"""Amplifier collaboration core module - shared interfaces and utilities.
+"""Amplifier collaboration core library - shared interfaces and utilities.
 
-This module provides the abstract CollaborationProvider interface that all
+This library provides the abstract CollaborationProvider interface that all
 platform-specific modules (M365, Slack, Google) implement.
 """
 
@@ -56,7 +56,7 @@ def get_provider(name: str) -> CollaborationProvider:
         available = ", ".join(_providers.keys()) if _providers else "(none registered)"
         raise ValueError(
             f"Provider '{name}' not registered. Available: {available}. "
-            f"Make sure the corresponding module is installed (e.g., amplifier-module-tool-{name})"
+            f"Make sure the corresponding module is installed (e.g., amplifier-collab-{name})"
         )
 
     return _providers[name]()
@@ -65,4 +65,3 @@ def get_provider(name: str) -> CollaborationProvider:
 def list_providers() -> list[str]:
     """List all registered provider names."""
     return list(_providers.keys())
-
