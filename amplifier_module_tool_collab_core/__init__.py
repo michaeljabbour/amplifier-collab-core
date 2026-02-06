@@ -25,8 +25,6 @@ __all__ = [
     "register_provider",
     "get_provider",
     "list_providers",
-    # Amplifier mount
-    "mount",
 ]
 
 
@@ -68,12 +66,3 @@ def list_providers() -> list[str]:
     """List all registered provider names."""
     return list(_providers.keys())
 
-
-def mount(session) -> None:
-    """Mount collaboration tools to an Amplifier session.
-
-    This module provides core interfaces - platform modules (tool-m365, tool-slack)
-    register their providers and this module exposes the tools.
-    """
-    # The core module registers tools; providers are registered by platform modules
-    pass
